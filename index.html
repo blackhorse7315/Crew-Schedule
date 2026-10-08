@@ -742,7 +742,7 @@
             const adminRef = doc(db, `${basePath}/app_users`, 'admin');
             getDoc(adminRef).then(docSnap => {
                 if (!docSnap.exists()) {
-                    setDoc(adminRef, { username: 'admin', password: 'admin123', role: 'admin' });
+                    setDoc(adminRef, { username: 'admin', password: 'TWA119-021', role: 'admin' });
                 }
             });
         }
