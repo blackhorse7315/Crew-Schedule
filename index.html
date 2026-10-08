@@ -9,6 +9,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Add Chart.js and html2pdf.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -48,9 +52,9 @@
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden antialiased">
 
     <div id="authOverlay" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative flex flex-col">
             <!-- Login View -->
-            <div id="loginView" class="p-8">
+            <div id="loginView" class="p-8 pb-4">
                 <div class="text-center mb-6">
                     <div class="w-12 h-12 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold text-2xl mx-auto mb-3 shadow-lg">
                         <i class="fa-solid fa-plane-departure"></i>
@@ -61,11 +65,16 @@
                 <form id="loginForm" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Username</label>
-                        <input type="text" id="loginUser" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none" value="admin">
+                        <input type="text" id="loginUser" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Password</label>
-                        <input type="password" id="loginPass" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none" value="admin123">
+                        <div class="relative">
+                            <input type="password" id="loginPass" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none pr-10">
+                            <button type="button" id="toggleLoginPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-brand-600 transition-colors focus:outline-none">
+                                <i class="fa-regular fa-eye" id="loginPassIcon"></i>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-md font-bold shadow-md hover:bg-brand-700 transition-colors">Log In</button>
                 </form>
@@ -75,24 +84,59 @@
             </div>
 
             <!-- Register View (Hidden) -->
-            <div id="registerView" class="p-8 hidden">
+            <div id="registerView" class="p-8 pb-4 hidden">
                 <div class="text-center mb-6">
                     <h2 class="text-2xl font-bold text-slate-800">Create Account</h2>
                     <p class="text-sm text-slate-500 mt-1">Register as Crew Member</p>
                 </div>
                 <form id="registerForm" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">New Username</label>
-                        <input type="text" id="regUser" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none">
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Full Name</label>
+                        <input type="text" id="regName" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. John Doe">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Email</label>
+                            <input type="email" id="regEmail" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none" placeholder="email@airline.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">WhatsApp</label>
+                            <input type="tel" id="regWhatsapp" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. 628123...">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">New Password</label>
-                        <input type="password" id="regPass" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none">
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Rank / Base Role</label>
+                        <select id="regRank" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                            <option value="Captain">Captain</option>
+                            <option value="First Officer">First Officer</option>
+                            <option value="Cabin Service">Cabin Service</option>
+                        </select>
                     </div>
-                    <button type="submit" class="w-full py-2.5 bg-slate-800 text-white rounded-md font-bold shadow-md hover:bg-slate-900 transition-colors">Register</button>
+                    <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Username</label>
+                            <input type="text" id="regUser" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Password</label>
+                            <div class="relative">
+                                <input type="password" id="regPass" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 outline-none pr-10">
+                                <button type="button" id="toggleRegPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-brand-600 transition-colors focus:outline-none">
+                                    <i class="fa-regular fa-eye" id="regPassIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-slate-800 text-white rounded-md font-bold shadow-md hover:bg-slate-900 transition-colors mt-2">Register & Join Crew</button>
                 </form>
                 <p class="text-center text-sm text-slate-500 mt-6">
                     Already have an account? <a href="#" id="showLogin" class="text-brand-600 font-bold hover:underline">Log In</a>
+                </p>
+            </div>
+            
+            <div class="bg-slate-50 py-3 text-center border-t border-slate-200 mt-auto">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Copyright &copy; SkyOps 2026 <span class="mx-2">&bull;</span> Build 8 October 2026
                 </p>
             </div>
         </div>
@@ -109,20 +153,20 @@
         <nav class="flex-1 overflow-y-auto py-4">
             <ul class="space-y-1 px-2 md:px-3">
                 <li>
-                    <a href="#" class="flex items-center px-3 py-2.5 bg-brand-50 text-brand-700 rounded-lg group">
+                    <a href="#" id="navRoster" class="flex items-center px-3 py-2.5 bg-brand-50 text-brand-700 rounded-lg group transition-colors">
                         <i class="fa-solid fa-calendar-week w-5 text-center text-brand-600"></i>
                         <span class="ml-3 hidden md:block font-medium">Weekly Roster</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="flex items-center px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg group transition-colors">
+                    <a href="#" id="navCrew" class="flex items-center px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg group transition-colors">
                         <i class="fa-solid fa-users-viewfinder w-5 text-center text-slate-400 group-hover:text-slate-600"></i>
                         <span class="ml-3 hidden md:block font-medium">Crew Database</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="flex items-center px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg group transition-colors">
-                        <i class="fa-solid fa-chart-line w-5 text-center text-slate-400 group-hover:text-slate-600"></i>
+                    <a href="#" id="navReports" class="flex items-center px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg group transition-colors">
+                        <i class="fa-solid fa-chart-pie w-5 text-center text-slate-400 group-hover:text-slate-600"></i>
                         <span class="ml-3 hidden md:block font-medium">Flight Reports</span>
                     </a>
                 </li>
@@ -131,7 +175,7 @@
         
         <div class="p-4 border-t border-slate-200">
             <div class="flex items-center justify-center md:justify-start">
-                <img src="https://i.pravatar.cc/150?img=11" alt="Admin" class="w-9 h-9 rounded-full border-2 border-white shadow-sm">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" alt="Admin" class="w-9 h-9 rounded-full border-2 border-white shadow-sm">
                 <div class="ml-3 hidden md:block">
                     <p id="sidebarProfileName" class="text-sm font-semibold text-slate-700">Dispatcher</p>
                     <p id="sidebarProfileRole" class="text-xs text-slate-500">Ops Control</p>
@@ -149,7 +193,7 @@
                 <span class="ml-2 font-bold text-lg text-slate-900">Aero<span class="text-brand-600">Roster</span></span>
             </div>
 
-            <div class="hidden sm:flex items-center space-x-4">
+            <div id="dateNavControls" class="hidden sm:flex items-center space-x-4">
                 <button id="btnPrevWeek" class="p-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors" title="Previous Week">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
@@ -178,7 +222,9 @@
         </header>
 
         <div class="flex-1 overflow-auto bg-slate-50 p-4 sm:p-6 relative">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[500px]">
+            
+            <!-- VIEW: ROSTER CALENDAR -->
+            <div id="viewRoster" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[500px]">
                 
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left border-collapse min-w-[1000px]">
@@ -202,12 +248,193 @@
                     <div class="flex flex-wrap gap-4 justify-center">
                         <div class="flex items-center text-xs font-medium"><span class="w-3 h-3 rounded bg-blue-500 mr-1.5"></span> Flight Duty</div>
                         <div class="flex items-center text-xs font-medium"><span class="w-3 h-3 rounded bg-amber-500 mr-1.5"></span> Standby</div>
+                        <div class="flex items-center text-xs font-medium"><span class="w-3 h-3 rounded bg-purple-500 mr-1.5"></span> Handover</div>
                         <div class="flex items-center text-xs font-medium"><span class="w-3 h-3 rounded bg-slate-300 mr-1.5"></span> Day Off</div>
                     </div>
                 </div>
             </div>
+
+            <!-- VIEW: CREW DATABASE -->
+            <div id="viewCrew" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[500px]">
+                <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-slate-50 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Crew Member Directory</h2>
+                        <p class="text-sm text-slate-500">Manage all registered flight and cabin crew personnel.</p>
+                    </div>
+                    <button id="btnOpenAddCrewModalDb" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors hidden items-center shrink-0">
+                        <i class="fa-solid fa-user-plus mr-2"></i> <span>Add New Crew</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto flex-1 p-0 sm:p-4">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
+                        <thead>
+                            <tr class="bg-slate-100 border-y sm:border-y-0 sm:border-b border-slate-200 text-sm">
+                                <th class="py-3 px-4 font-semibold text-slate-600">Crew Member</th>
+                                <th class="py-3 px-4 font-semibold text-slate-600">Base Role</th>
+                                <th class="py-3 px-4 font-semibold text-slate-600">Email</th>
+                                <th class="py-3 px-4 font-semibold text-slate-600">WhatsApp</th>
+                                <th class="py-3 px-4 font-semibold text-slate-600 text-center">Active Duties</th>
+                                <th class="py-3 px-4 font-semibold text-slate-600 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crewDbBody" class="divide-y divide-slate-200">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: FLIGHT REPORTS -->
+            <div id="viewReports" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 flex-col h-full overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center bg-slate-50 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Crew Analytics & Reports</h2>
+                        <p class="text-sm text-slate-500">View detailed assignments and generate PDF reports.</p>
+                    </div>
+                    <div class="flex space-x-3 w-full sm:w-auto">
+                        <select id="reportCrewSelect" class="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none w-full sm:w-64">
+                            <option value="all">All Crew (Summary)</option>
+                            <!-- Injected by JS -->
+                        </select>
+                        <button id="btnDownloadPdf" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center shrink-0">
+                            <i class="fa-solid fa-file-pdf mr-2"></i> <span>Download PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Report Content (This will be captured for PDF) -->
+                <div id="pdfContentArea" class="flex-1 overflow-y-auto p-5 bg-white">
+                    <div class="mb-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xl font-bold mr-4" id="reportAvatarFallback">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800" id="reportTitleName">All Crew Overview</h3>
+                                <p class="text-sm text-slate-500 font-medium" id="reportTitleRole">Fleet Analytics</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-slate-800" id="reportYearText">Year: 2026</p>
+                            <p class="text-xs text-slate-400">Generated on: <span id="reportGeneratedDate"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">This Week</p>
+                                <h4 class="text-3xl font-black text-blue-900" id="statWeek">0</h4>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-lg"><i class="fa-solid fa-calendar-day"></i></div>
+                        </div>
+                        <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-1">This Month</p>
+                                <h4 class="text-3xl font-black text-brand-900" id="statMonth">0</h4>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-lg"><i class="fa-solid fa-calendar-days"></i></div>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-100 rounded-xl p-4 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">This Year</p>
+                                <h4 class="text-3xl font-black text-purple-900" id="statYear">0</h4>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-lg"><i class="fa-solid fa-plane-up"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Area -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="lg:col-span-2 border border-slate-200 rounded-xl p-4">
+                            <h4 class="text-sm font-bold text-slate-700 mb-4">Monthly Flight Assignments</h4>
+                            <div class="relative h-64 w-full">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="border border-slate-200 rounded-xl p-4 flex flex-col">
+                            <h4 class="text-sm font-bold text-slate-700 mb-4">Duty Distribution</h4>
+                            <div class="relative flex-1 flex items-center justify-center min-h-[200px]">
+                                <canvas id="dutyTypeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Table -->
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-700 mb-3">Detailed Assignment Log</h4>
+                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-2.5 px-4 font-semibold text-slate-600">Date</th>
+                                        <th class="py-2.5 px-4 font-semibold text-slate-600">Duty Type</th>
+                                        <th class="py-2.5 px-4 font-semibold text-slate-600">Route/Context</th>
+                                        <th class="py-2.5 px-4 font-semibold text-slate-600">Role</th>
+                                        <th class="py-2.5 px-4 font-semibold text-slate-600">Time / Reg</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTableBody" class="divide-y divide-slate-100">
+                                    <!-- Injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
         </div>
+        
+        <!-- Application Footer -->
+        <footer class="bg-white border-t border-slate-200 py-2.5 px-4 text-center shrink-0 z-10">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Copyright &copy; SkyOps 2026 <span class="mx-2">&bull;</span> Build 8 October 2026
+            </p>
+        </footer>
     </main>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 z-[100] bg-slate-900/40 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all">
+            <div class="p-6 text-center">
+                <div class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 id="confirmTitle" class="text-xl font-bold text-slate-800 mb-2">Delete Crew</h3>
+                <p id="confirmMessage" class="text-sm text-slate-500 mb-6 font-medium">Are you sure you want to delete this crew member?</p>
+                <div class="flex space-x-3 justify-center">
+                    <button id="btnCancelConfirm" class="px-5 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors w-full">Cancel</button>
+                    <button id="btnAcceptConfirm" class="px-5 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 shadow-sm transition-colors w-full">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Action Modal -->
+    <div id="notificationModal" class="hidden fixed inset-0 z-[100] bg-slate-900/40 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="p-6 text-center">
+                <div class="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                    <i class="fa-solid fa-check-double"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Duty Assigned Successfully</h3>
+                <p class="text-sm text-slate-500 mb-6 font-medium">Would you like to notify <span id="notifyCrewName" class="font-bold text-slate-700"></span> about this assignment?</p>
+                
+                <div class="flex flex-col space-y-3">
+                    <button id="btnSendWA" class="w-full px-5 py-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                        <i class="fa-brands fa-whatsapp text-lg mr-2"></i> Send via WhatsApp
+                    </button>
+                    <button id="btnSendEmail" class="w-full px-5 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                        <i class="fa-regular fa-envelope text-lg mr-2"></i> Send via Email
+                    </button>
+                    <button id="btnSkipNotify" class="w-full px-5 py-2.5 text-slate-500 hover:text-slate-700 text-sm font-semibold hover:bg-slate-50 rounded-lg transition-colors mt-2">
+                        Skip for now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="assignDutyModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
@@ -237,18 +464,22 @@
                     <!-- Duty Type -->
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Duty Type</label>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-4 gap-2">
                             <label class="cursor-pointer">
                                 <input type="radio" name="dutyType" value="flight" class="peer sr-only" checked>
-                                <div class="text-center px-2 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-brand-50 peer-checked:border-brand-500 peer-checked:text-brand-700 hover:bg-slate-50 transition-all font-medium">Flight</div>
+                                <div class="text-center px-1 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-brand-50 peer-checked:border-brand-500 peer-checked:text-brand-700 hover:bg-slate-50 transition-all font-medium whitespace-nowrap">Flight</div>
                             </label>
                             <label class="cursor-pointer">
                                 <input type="radio" name="dutyType" value="standby" class="peer sr-only">
-                                <div class="text-center px-2 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-amber-700 hover:bg-slate-50 transition-all font-medium">Standby</div>
+                                <div class="text-center px-1 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-amber-700 hover:bg-slate-50 transition-all font-medium whitespace-nowrap">Standby</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="dutyType" value="handover" class="peer sr-only">
+                                <div class="text-center px-1 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-purple-50 peer-checked:border-purple-500 peer-checked:text-purple-700 hover:bg-slate-50 transition-all font-medium whitespace-nowrap">Handover</div>
                             </label>
                             <label class="cursor-pointer">
                                 <input type="radio" name="dutyType" value="off" class="peer sr-only">
-                                <div class="text-center px-2 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-slate-100 peer-checked:border-slate-400 peer-checked:text-slate-700 hover:bg-slate-50 transition-all font-medium">Day Off</div>
+                                <div class="text-center px-1 py-2 text-sm border border-slate-200 rounded-md peer-checked:bg-slate-100 peer-checked:border-slate-400 peer-checked:text-slate-700 hover:bg-slate-50 transition-all font-medium whitespace-nowrap">Day Off</div>
                             </label>
                         </div>
                     </div>
@@ -268,12 +499,15 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Assign As</label>
-                                <select id="dutyRole" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
-                                    <option value="PIC">PIC (Capt)</option>
-                                    <option value="SIC">SIC (FO)</option>
-                                    <option value="CS">CS (Cabin Sup)</option>
-                                    <option value="FA">FA (Flight Attendant)</option>
+                                <select id="dutyRole" class="w-full px-3 py-2 mb-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                                    <option value="PIC Leader">PIC Leader</option>
+                                    <option value="PIC">PIC</option>
+                                    <option value="SIC">SIC</option>
+                                    <option value="CS">CS</option>
+                                    <option value="Extra Crew">Extra Crew</option>
+                                    <option value="custom">Other (Add Manual)...</option>
                                 </select>
+                                <input type="text" id="customDutyRole" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all placeholder-slate-300 hidden" placeholder="Type custom role...">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Sign-On Time</label>
@@ -306,18 +540,42 @@
             </div>
             <div class="p-6">
                 <form id="addCrewForm" class="space-y-4">
+                    <div class="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-100">
+                        <div class="relative w-16 h-16 rounded-full overflow-hidden border-2 border-brand-100 bg-slate-100 flex-shrink-0 group">
+                            <img id="crewAvatarPreview" src="https://ui-avatars.com/api/?name=New+Crew&background=0ea5e9&color=fff" alt="Preview" class="w-full h-full object-cover">
+                            <label for="crewAvatarUpload" class="absolute inset-0 bg-slate-900/50 hidden group-hover:flex flex-col items-center justify-center text-white cursor-pointer transition-all" title="Upload Photo">
+                                <i class="fa-solid fa-camera text-sm"></i>
+                            </label>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Profile Photo</label>
+                            <input type="file" id="crewAvatarUpload" accept="image/jpeg, image/png, image/webp" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 outline-none transition-all cursor-pointer">
+                            <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG. Max: 1MB.</p>
+                            <input type="hidden" id="crewAvatarBase64" value="">
+                        </div>
+                    </div>
+                    
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Full Name</label>
                         <input type="text" id="crewName" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all placeholder-slate-400" placeholder="e.g. John Doe">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Email</label>
+                        <input type="email" id="crewEmail" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all placeholder-slate-400" placeholder="e.g. email@airline.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">WhatsApp</label>
+                        <input type="tel" id="crewWhatsapp" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all placeholder-slate-400" placeholder="e.g. 628123456789">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Base Role</label>
-                        <select id="crewRole" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                        <select id="crewRole" class="w-full px-4 py-2 mb-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                             <option value="Captain">Captain</option>
                             <option value="First Officer">First Officer</option>
-                            <option value="Cabin Supervisor">Cabin Supervisor</option>
-                            <option value="Flight Attendant" selected>Flight Attendant</option>
+                            <option value="Cabin Service" selected>Cabin Service</option>
+                            <option value="custom">Other (Add Manual)...</option>
                         </select>
+                        <input type="text" id="customRole" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all placeholder-slate-400 hidden" placeholder="Type custom role here...">
                     </div>
                 </form>
             </div>
@@ -333,40 +591,49 @@
         <span id="toastMsg" class="text-sm font-medium">Success notification</span>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Initialize Firebase using the provided configuration
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBzcfPBaHdmTRLCSrvuT1F-qDsJWUZZQT8",
+            authDomain: "twa-ecrew.firebaseapp.com",
+            projectId: "twa-ecrew",
+            storageBucket: "twa-ecrew.firebasestorage.app",
+            messagingSenderId: "559962441630",
+            appId: "1:559962441630:web:16554b7ea7877a116c788f",
+            measurementId: "G-87X6TPRCT4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Strict Path Management for Collaborative Data
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'twa-ecrew-default';
+        const basePath = `artifacts/${appId}/public/data`;
+
         const state = {
-            crew: [
-                { id: 'c1', name: 'Capt. Aryo Bima', role: 'Captain', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
-                { id: 'c2', name: 'FO. Rendy Saputra', role: 'First Officer', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-                { id: 'c3', name: 'CS. Diana Sari', role: 'Cabin Supervisor', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
-                { id: 'c4', name: 'FA. Rina Melati', role: 'Flight Attendant', avatar: 'https://i.pravatar.cc/150?u=a048581f4e29026701d' },
-                { id: 'c5', name: 'FA. Budi Santoso', role: 'Flight Attendant', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026703d' }
-            ],
-            schedule: {
-                '2026-10-01': { 
-                    'c1': { id: 'd1', type: 'flight', route: 'CGK-DPS-CGK', role: 'PIC', reg: 'PK-GIA', signOn: '05:30' },
-                    'c2': { id: 'd2', type: 'flight', route: 'CGK-DPS-CGK', role: 'SIC', reg: 'PK-GIA', signOn: '05:30' },
-                    'c3': { id: 'd3', type: 'flight', route: 'CGK-DPS-CGK', role: 'CS', reg: 'PK-GIA', signOn: '05:00' },
-                    'c4': { id: 'd4', type: 'flight', route: 'CGK-DPS-CGK', role: 'FA', reg: 'PK-GIA', signOn: '05:00' },
-                    'c5': { id: 'd5', type: 'standby', signOn: '08:00' }
-                },
-                '2026-10-02': { 
-                    'c1': { id: 'd6', type: 'off' },
-                    'c2': { id: 'd7', type: 'off' },
-                    'c3': { id: 'd8', type: 'flight', route: 'CGK-KNO', role: 'CS', reg: 'PK-GIC', signOn: '14:00' },
-                    'c4': { id: 'd9', type: 'flight', route: 'CGK-KNO', role: 'FA', reg: 'PK-GIC', signOn: '14:00' },
-                    'c5': { id: 'd10', type: 'flight', route: 'CGK-KNO', role: 'FA', reg: 'PK-GIC', signOn: '14:00' }
-                }
-            },
+            crew: [],
+            schedule: {},
             currentDate: new Date('2026-10-01T00:00:00'),
             activeDutySelection: { crewId: null, dateStr: null, crewName: null },
-            users: [
-                { username: 'admin', password: 'admin123', role: 'admin' }
-            ],
+            editingCrewId: null,
+            currentView: 'roster',
             currentUser: null
         };
 
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const VIEW_DAYS = 25;
+
+        // Chart instances
+        let monthlyChartInstance = null;
+        let dutyChartInstance = null;
+
+        const DOM = {
             gridHeader: document.getElementById('gridHeader'),
             gridBody: document.getElementById('gridBody'),
             currentDateRange: document.getElementById('currentDateRange'),
@@ -380,6 +647,23 @@
             crewModal: document.getElementById('addCrewModal'),
             addCrewForm: document.getElementById('addCrewForm'),
             
+            viewRoster: document.getElementById('viewRoster'),
+            viewCrew: document.getElementById('viewCrew'),
+            viewReports: document.getElementById('viewReports'),
+            navRoster: document.getElementById('navRoster'),
+            navCrew: document.getElementById('navCrew'),
+            navReports: document.getElementById('navReports'),
+            dateNavControls: document.getElementById('dateNavControls'),
+            btnOpenAddCrewModalDb: document.getElementById('btnOpenAddCrewModalDb'),
+            crewDbBody: document.getElementById('crewDbBody'),
+            confirmModal: document.getElementById('confirmModal'),
+            
+            notificationModal: document.getElementById('notificationModal'),
+            notifyCrewName: document.getElementById('notifyCrewName'),
+            btnSendWA: document.getElementById('btnSendWA'),
+            btnSendEmail: document.getElementById('btnSendEmail'),
+            btnSkipNotify: document.getElementById('btnSkipNotify'),
+            
             toast: document.getElementById('toast'),
             toastMsg: document.getElementById('toastMsg'),
             toastIcon: document.getElementById('toastIcon'),
@@ -387,8 +671,81 @@
             authOverlay: document.getElementById('authOverlay'),
             loginView: document.getElementById('loginView'),
             registerView: document.getElementById('registerView'),
-            btnLogout: document.getElementById('btnLogout')
+            btnLogout: document.getElementById('btnLogout'),
+            
+            reportCrewSelect: document.getElementById('reportCrewSelect'),
+            btnDownloadPdf: document.getElementById('btnDownloadPdf'),
+            statWeek: document.getElementById('statWeek'),
+            statMonth: document.getElementById('statMonth'),
+            statYear: document.getElementById('statYear'),
+            reportTableBody: document.getElementById('reportTableBody'),
+            reportTitleName: document.getElementById('reportTitleName'),
+            reportTitleRole: document.getElementById('reportTitleRole'),
+            reportAvatarFallback: document.getElementById('reportAvatarFallback'),
+            reportYearText: document.getElementById('reportYearText'),
+            reportGeneratedDate: document.getElementById('reportGeneratedDate'),
+            pdfContentArea: document.getElementById('pdfContentArea')
         };
+
+        // EXPOSE GLOBALS FOR HTML ONCLICK BINDINGS
+        window.editCrew = editCrew;
+        window.promptDeleteCrew = promptDeleteCrew;
+
+        async function initializeAppAuth() {
+            initAuthUI();
+            try {
+                // RULE 3: Authenticate before accessing Firestore
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                if (!auth.currentUser) return;
+                console.log("Firebase Auth Success. Starting real-time sync...");
+                startRealtimeSync();
+            } catch (err) {
+                console.error("Firebase connection error:", err);
+                showToast("Database connection failed", "error");
+            }
+        }
+
+        function startRealtimeSync() {
+            if (!auth.currentUser) return;
+
+            // Sync Crew Directory
+            onSnapshot(collection(db, `${basePath}/crew`), (snapshot) => {
+                state.crew = [];
+                snapshot.forEach(d => state.crew.push(d.data()));
+                
+                if (state.currentView === 'crew') renderCrewDatabase();
+                else if (state.currentView === 'roster') renderGrid();
+                else if (state.currentView === 'reports') initReports();
+                
+                updateSummary();
+            }, (err) => console.error("Crew sync error:", err));
+
+            // Sync Schedules
+            onSnapshot(collection(db, `${basePath}/schedules`), (snapshot) => {
+                state.schedule = {};
+                snapshot.forEach(d => {
+                    state.schedule[d.id] = d.data();
+                });
+                
+                if (state.currentView === 'roster') renderGrid();
+                else if (state.currentView === 'reports') generateReportData();
+                
+                updateSummary();
+            }, (err) => console.error("Schedule sync error:", err));
+
+            // Seed Admin User if DB is totally fresh
+            const adminRef = doc(db, `${basePath}/app_users`, 'admin');
+            getDoc(adminRef).then(docSnap => {
+                if (!docSnap.exists()) {
+                    setDoc(adminRef, { username: 'admin', password: 'admin123', role: 'admin' });
+                }
+            });
+        }
 
         function getMonday(d) {
             d = new Date(d);
@@ -432,7 +789,7 @@
                 DOM.gridHeader.removeChild(DOM.gridHeader.lastChild);
             }
 
-            const todayKey = formatDateKey(new Date('2026-10-01T00:00:00')); // MOCKED TODAY
+            const todayKey = formatDateKey(new Date()); 
 
             for (let i = 0; i < VIEW_DAYS; i++) {
                 const currentDate = addDays(startDate, i);
@@ -471,6 +828,14 @@
                         ${duty.signOn ? `<span class="text-[10px] font-medium mt-1">Sign-on: ${duty.signOn}</span>` : ''}
                     </div>
                 `;
+            } else if (duty.type === 'handover') {
+                return `
+                    <div class="w-full h-full p-2 bg-purple-50 border border-purple-200 rounded-md flight-strip text-purple-800 flex flex-col justify-center items-center hover:bg-purple-100 transition-colors">
+                        <i class="fa-solid fa-handshake mb-1 opacity-70"></i>
+                        <span class="font-bold text-[10px] uppercase tracking-wider">Handover</span>
+                        ${duty.signOn ? `<span class="text-[10px] font-medium mt-1">Time: ${duty.signOn}</span>` : ''}
+                    </div>
+                `;
             } else if (duty.type === 'off') {
                 return `
                     <div class="w-full h-full p-2 bg-slate-100 border border-slate-200 rounded-md text-slate-500 flex flex-col justify-center items-center hover:bg-slate-200 transition-colors">
@@ -487,7 +852,7 @@
             const startDate = new Date(state.currentDate);
 
             if (state.crew.length === 0) {
-                DOM.gridBody.innerHTML = `<tr><td colspan="${VIEW_DAYS + 1}" class="text-center py-10 text-slate-500 font-medium">No crew members found. Add crew to begin scheduling.</td></tr>`;
+                DOM.gridBody.innerHTML = `<tr><td colspan="${VIEW_DAYS + 1}" class="text-center py-10 text-slate-500 font-medium">No crew members found. Waiting for database sync or add crew to begin.</td></tr>`;
                 return;
             }
 
@@ -511,7 +876,7 @@
                 for (let i = 0; i < VIEW_DAYS; i++) {
                     const currentDate = addDays(startDate, i);
                     const dateKey = formatDateKey(currentDate);
-                    const isToday = dateKey === formatDateKey(new Date('2026-10-01T00:00:00'));
+                    const isToday = dateKey === formatDateKey(new Date());
                     
                     const dutyData = state.schedule[dateKey]?.[person.id];
 
@@ -546,31 +911,30 @@
             });
         }
 
-        
         // Handle Duty Form Type Toggle
         document.querySelectorAll('input[name="dutyType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                if (e.target.value === 'flight') {
-                    DOM.flightDetailsContainer.style.display = 'block';
-                } else if (e.target.value === 'standby') {
-                    DOM.flightDetailsContainer.style.display = 'block';
-                    // Hide route/reg/role for standby, keep signon
-                    document.getElementById('dutyRoute').parentElement.style.display = 'none';
-                    document.getElementById('dutyReg').parentElement.style.display = 'none';
-                    document.getElementById('dutyRole').parentElement.style.display = 'none';
-                } else {
-                    DOM.flightDetailsContainer.style.display = 'none';
+                const isFlight = e.target.value === 'flight';
+                const isTimeOnly = e.target.value === 'standby' || e.target.value === 'handover';
+                
+                DOM.flightDetailsContainer.style.display = (isFlight || isTimeOnly) ? 'block' : 'none';
+                
+                if (document.getElementById('dutyRoute')) {
+                    document.getElementById('dutyRoute').parentElement.style.display = isFlight ? 'block' : 'none';
+                    document.getElementById('dutyReg').parentElement.style.display = isFlight ? 'block' : 'none';
+                    document.getElementById('dutyRole').parentElement.style.display = isFlight ? 'block' : 'none';
                 }
             });
         });
 
         function resetDutyFormInputs() {
             DOM.dutyForm.reset();
-            // Reset visibility
             DOM.flightDetailsContainer.style.display = 'block';
             document.getElementById('dutyRoute').parentElement.style.display = 'block';
             document.getElementById('dutyReg').parentElement.style.display = 'block';
             document.getElementById('dutyRole').parentElement.style.display = 'block';
+            document.getElementById('customDutyRole').classList.add('hidden');
+            document.getElementById('customDutyRole').value = '';
         }
 
         function openDutyModal(crewId, crewName, dateStr) {
@@ -584,7 +948,6 @@
             let endDateVal = dateStr;
 
             if (existingDuty) {
-                // Find start and end dates if this duty is part of a multi-day block
                 if (existingDuty.id) {
                     const datesWithThisDuty = Object.keys(state.schedule).filter(k => state.schedule[k][crewId]?.id === existingDuty.id).sort();
                     if (datesWithThisDuty.length > 0) {
@@ -594,15 +957,30 @@
                 }
 
                 document.querySelector(`input[name="dutyType"][value="${existingDuty.type}"]`).checked = true;
-                // Trigger change event to set UI state
                 document.querySelector(`input[name="dutyType"][value="${existingDuty.type}"]`).dispatchEvent(new Event('change'));
                 
                 if (existingDuty.type === 'flight') {
                     document.getElementById('dutyRoute').value = existingDuty.route || '';
                     document.getElementById('dutyReg').value = existingDuty.reg || '';
-                    document.getElementById('dutyRole').value = existingDuty.role || 'PIC';
+                    
+                    const roleSelect = document.getElementById('dutyRole');
+                    const savedRole = existingDuty.role || 'PIC';
+                    const customRoleInput = document.getElementById('customDutyRole');
+                    
+                    const isPredefined = Array.from(roleSelect.options).some(opt => opt.value === savedRole && opt.value !== 'custom');
+                    
+                    if (isPredefined) {
+                        roleSelect.value = savedRole;
+                        customRoleInput.classList.add('hidden');
+                        customRoleInput.value = '';
+                    } else {
+                        roleSelect.value = 'custom';
+                        customRoleInput.classList.remove('hidden');
+                        customRoleInput.value = savedRole;
+                    }
+                    
                     document.getElementById('dutySignOn').value = existingDuty.signOn || '';
-                } else if (existingDuty.type === 'standby') {
+                } else if (existingDuty.type === 'standby' || existingDuty.type === 'handover') {
                     document.getElementById('dutySignOn').value = existingDuty.signOn || '';
                 }
                 document.getElementById('btnRemoveDutyModal').classList.remove('hidden');
@@ -647,8 +1025,10 @@
         document.getElementById('btnCloseDutyModal').onclick = closeDutyModal;
         document.getElementById('btnCancelDutyModal').onclick = closeDutyModal;
 
-        document.getElementById('btnSaveDuty').onclick = (e) => {
+        document.getElementById('btnSaveDuty').onclick = async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
+
             const { crewId, dateStr } = state.activeDutySelection;
             const dutyType = document.querySelector('input[name="dutyType"]:checked').value;
             const startDateStr = document.getElementById('dutyStartDate').value;
@@ -659,24 +1039,23 @@
                 return;
             }
 
-            // Clean up old multi-day block if editing an existing assignment
             const existingDuty = state.schedule[dateStr]?.[crewId];
             const dutyId = (existingDuty && existingDuty.id) ? existingDuty.id : 'd_' + Date.now();
-
-            if (existingDuty && existingDuty.id) {
-                Object.keys(state.schedule).forEach(k => {
-                    if (state.schedule[k][crewId]?.id === existingDuty.id) {
-                        delete state.schedule[k][crewId];
-                    }
-                });
-            }
 
             let dutyObj = { id: dutyId, type: dutyType };
 
             if (dutyType === 'flight') {
                 const route = document.getElementById('dutyRoute').value.trim();
                 const reg = document.getElementById('dutyReg').value.trim();
-                const role = document.getElementById('dutyRole').value;
+                let role = document.getElementById('dutyRole').value;
+                
+                if (role === 'custom') {
+                    role = document.getElementById('customDutyRole').value.trim();
+                    if (!role) {
+                        showToast('Please specify the custom role', 'error');
+                        return;
+                    }
+                }
                 const signOn = document.getElementById('dutySignOn').value;
                 
                 if (!route || !signOn) {
@@ -684,93 +1063,72 @@
                     return;
                 }
                 dutyObj = { ...dutyObj, route: route.toUpperCase(), reg: reg.toUpperCase(), role, signOn };
-            } else if (dutyType === 'standby') {
+            } else if (dutyType === 'standby' || dutyType === 'handover') {
                 const signOn = document.getElementById('dutySignOn').value;
                 dutyObj = { ...dutyObj, signOn };
             }
 
-            // Loop from start date to end date and assign duty
-            let currDate = new Date(startDateStr);
-            const endD = new Date(endDateStr);
-            
-            while(currDate <= endD) {
-                const k = formatDateKey(currDate);
-                if (!state.schedule[k]) state.schedule[k] = {};
-                // We clone the object for each day so they hold identical data but don't cause reference bugs
-                state.schedule[k][crewId] = { ...dutyObj }; 
-                currDate = addDays(currDate, 1);
-            }
+            // Sync to Firebase
+            try {
+                // If editing existing block, clear old occurrences
+                if (existingDuty && existingDuty.id) {
+                    const clearPromises = [];
+                    Object.keys(state.schedule).forEach(k => {
+                        if (state.schedule[k][crewId]?.id === existingDuty.id) {
+                            clearPromises.push(updateDoc(doc(db, `${basePath}/schedules`, k), {
+                                [crewId]: deleteField()
+                            }));
+                        }
+                    });
+                    await Promise.all(clearPromises);
+                }
 
-            closeDutyModal();
-            renderGrid();
-            updateSummary();
-            showToast('Duty block assigned successfully');
+                // Save new assignments
+                const savePromises = [];
+                let currDate = new Date(startDateStr);
+                const endD = new Date(endDateStr);
+                
+                while(currDate <= endD) {
+                    const k = formatDateKey(currDate);
+                    savePromises.push(setDoc(doc(db, `${basePath}/schedules`, k), {
+                        [crewId]: dutyObj
+                    }, { merge: true }));
+                    currDate = addDays(currDate, 1);
+                }
+                await Promise.all(savePromises);
+
+                closeDutyModal();
+                promptNotification(crewId, dutyObj, startDateStr, endDateStr);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save schedule to database', 'error');
+            }
         };
 
-        document.getElementById('btnRemoveDutyModal').onclick = () => {
+        document.getElementById('btnRemoveDutyModal').onclick = async () => {
+            if (!auth.currentUser) return;
             const { crewId, dateStr } = state.activeDutySelection;
             const targetDuty = state.schedule[dateStr]?.[crewId];
             
             if (targetDuty) {
                 const targetId = targetDuty.id;
-                // Loop through all schedule dates and remove matching duty ID for this crew member
-                Object.keys(state.schedule).forEach(dateKey => {
-                    if (state.schedule[dateKey][crewId]?.id === targetId || (!targetId && dateKey === dateStr)) {
-                        delete state.schedule[dateKey][crewId];
-                        
-                        // Clean up empty date objects
-                        if (Object.keys(state.schedule[dateKey]).length === 0) {
-                            delete state.schedule[dateKey];
+                try {
+                    const deletePromises = [];
+                    Object.keys(state.schedule).forEach(dateKey => {
+                        if (state.schedule[dateKey][crewId]?.id === targetId || (!targetId && dateKey === dateStr)) {
+                            deletePromises.push(updateDoc(doc(db, `${basePath}/schedules`, dateKey), {
+                                [crewId]: deleteField()
+                            }));
                         }
-                    }
-                });
+                    });
+                    await Promise.all(deletePromises);
+                    closeDutyModal();
+                    showToast('Duty block removed', 'info');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to remove duty from database', 'error');
+                }
             }
-            
-            closeDutyModal();
-            renderGrid();
-            updateSummary();
-            showToast('Duty block removed', 'info');
-        };
-
-        // Crew Modal
-        function toggleCrewModal(show) {
-            if (show) {
-                DOM.crewModal.classList.remove('hidden');
-                setTimeout(() => DOM.crewModal.querySelector('div').classList.remove('scale-95', 'opacity-0'), 10);
-                document.getElementById('crewName').focus();
-            } else {
-                DOM.crewModal.classList.add('hidden');
-                DOM.addCrewForm.reset();
-            }
-        }
-
-        document.getElementById('btnOpenAddCrewModal').onclick = () => toggleCrewModal(true);
-        document.getElementById('btnCloseCrewModal').onclick = () => toggleCrewModal(false);
-        document.getElementById('btnCancelCrewModal').onclick = () => toggleCrewModal(false);
-
-        document.getElementById('btnSaveCrew').onclick = (e) => {
-            e.preventDefault();
-            const name = document.getElementById('crewName').value.trim();
-            const role = document.getElementById('crewRole').value;
-
-            if (!name) {
-                showToast('Crew name is required', 'error');
-                return;
-            }
-
-            const prefix = role === 'Captain' ? 'Capt.' : role === 'First Officer' ? 'FO.' : role === 'Cabin Supervisor' ? 'CS.' : 'FA.';
-            const newCrew = {
-                id: 'c' + Date.now(),
-                name: `${prefix} ${name}`,
-                role: role,
-                avatar: `https://i.pravatar.cc/150?u=${name.replace(/\s/g, '')}${Date.now()}`
-            };
-
-            state.crew.push(newCrew);
-            toggleCrewModal(false);
-            renderGrid();
-            updateSummary();
-            showToast(`${name} added to roster`);
         };
 
         // Date Navigation
@@ -778,7 +1136,72 @@
         document.getElementById('btnNextWeek').title = "Next Period";
         document.getElementById('btnPrevWeek').onclick = () => { state.currentDate = addDays(state.currentDate, -VIEW_DAYS); renderApp(); };
         document.getElementById('btnNextWeek').onclick = () => { state.currentDate = addDays(state.currentDate, VIEW_DAYS); renderApp(); };
-        document.getElementById('btnToday').onclick = () => { state.currentDate = new Date('2026-10-01T00:00:00'); renderApp(); };
+        document.getElementById('btnToday').onclick = () => { state.currentDate = new Date(); renderApp(); };
+
+        function promptNotification(crewId, dutyObj, startDateStr, endDateStr) {
+            const person = state.crew.find(c => c.id === crewId);
+            if (!person) return;
+            
+            DOM.notifyCrewName.textContent = person.name;
+            
+            if (person.whatsapp) {
+                DOM.btnSendWA.classList.remove('opacity-50', 'cursor-not-allowed');
+                DOM.btnSendWA.onclick = () => sendNotification('wa', person, dutyObj, startDateStr, endDateStr);
+            } else {
+                DOM.btnSendWA.classList.add('opacity-50', 'cursor-not-allowed');
+                DOM.btnSendWA.onclick = () => showToast('No WhatsApp number registered for this crew.', 'error');
+            }
+
+            if (person.email) {
+                DOM.btnSendEmail.classList.remove('opacity-50', 'cursor-not-allowed');
+                DOM.btnSendEmail.onclick = () => sendNotification('email', person, dutyObj, startDateStr, endDateStr);
+            } else {
+                DOM.btnSendEmail.classList.add('opacity-50', 'cursor-not-allowed');
+                DOM.btnSendEmail.onclick = () => showToast('No Email address registered for this crew.', 'error');
+            }
+
+            DOM.notificationModal.classList.remove('hidden');
+            setTimeout(() => DOM.notificationModal.querySelector('div').classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        DOM.btnSkipNotify.onclick = () => {
+            DOM.notificationModal.classList.add('hidden');
+            showToast('Duty block assigned successfully');
+        };
+
+        function formatDisplayDateStr(dateStr) {
+            const d = new Date(dateStr);
+            return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function sendNotification(method, person, duty, startDate, endDate) {
+            const dateRangeText = startDate === endDate ? formatDisplayDateStr(startDate) : `${formatDisplayDateStr(startDate)} to ${formatDisplayDateStr(endDate)}`;
+            const dutyTypeName = duty.type.charAt(0).toUpperCase() + duty.type.slice(1);
+            
+            let flightDetails = '';
+            if (duty.type === 'flight') {
+                flightDetails = `\nRoute: ${duty.route}\nAircraft Reg: ${duty.reg}\nAssigned Role: ${duty.role}`;
+            }
+
+            if (method === 'wa') {
+                const waNumber = person.whatsapp.replace(/[^0-9]/g, '');
+                const text = `Dear ${person.name},\n\nPlease be advised of your new duty assignment from AeroRoster Pro:\n\n📅 *Date:* ${dateRangeText}\n📋 *Duty Type:* ${dutyTypeName}${flightDetails}\n🕒 *Sign-on Time:* ${duty.signOn || '-'}\n\nPlease ensure you arrive on time and are fully prepared for the duty. Acknowledge this message to confirm receipt.\n\nSafe flights! 🛫\n_Crew Scheduling Dept._`;
+                
+                const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`;
+                window.open(waUrl, '_blank');
+                DOM.notificationModal.classList.add('hidden');
+                showToast('Opening WhatsApp...');
+            } 
+            else if (method === 'email') {
+                const subject = `Flight Duty Assignment: ${dateRangeText} - ${duty.type === 'flight' ? duty.route : dutyTypeName}`;
+                const body = `Dear ${person.name},\n\nPlease be advised of your upcoming duty assignment details below:\n\nDate: ${dateRangeText}\nDuty Type: ${dutyTypeName}${flightDetails}\nSign-on Time: ${duty.signOn || '-'}\n\nPlease ensure you arrive on time and are fully prepared for the duty. If you have any questions, please contact the dispatch center immediately.\n\nBest regards,\n\nCrew Scheduling Dept.\nAeroRoster Pro`;
+                
+                const mailtoUrl = `mailto:${person.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                window.location.href = mailtoUrl;
+                DOM.notificationModal.classList.add('hidden');
+                showToast('Opening Email Client...');
+            }
+        }
 
         let toastTimeout;
         function showToast(message, type = 'success') {
@@ -805,11 +1228,549 @@
             DOM.summaryText.innerHTML = `<span class="font-semibold text-slate-700">Total Crew:</span> ${state.crew.length} &nbsp;|&nbsp; <span class="font-semibold text-slate-700">Total Flights (Shown):</span> ${totalFlights}`;
         }
 
-        function initAuth() {
-            // Initial view
+        document.getElementById('navRoster').onclick = (e) => { e.preventDefault(); switchView('roster'); };
+        document.getElementById('navCrew').onclick = (e) => { e.preventDefault(); switchView('crew'); };
+        document.getElementById('navReports').onclick = (e) => { e.preventDefault(); switchView('reports'); };
+
+        function switchView(view) {
+            state.currentView = view;
+            
+            [DOM.navRoster, DOM.navCrew, DOM.navReports].forEach(nav => {
+                nav.className = "flex items-center px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg group transition-colors";
+                const icon = nav.querySelector('i');
+                icon.classList.remove('text-brand-600');
+                icon.classList.add('text-slate-400', 'group-hover:text-slate-600');
+            });
+
+            if (view === 'roster') {
+                DOM.viewRoster.classList.remove('hidden');
+                DOM.viewCrew.classList.add('hidden');
+                DOM.viewReports.classList.add('hidden');
+                
+                DOM.navRoster.className = "flex items-center px-3 py-2.5 bg-brand-50 text-brand-700 rounded-lg group transition-colors";
+                DOM.navRoster.querySelector('i').className = "fa-solid fa-calendar-week w-5 text-center text-brand-600";
+                
+                DOM.dateNavControls.classList.remove('sm:hidden');
+                document.getElementById('btnOpenAddCrewModal').classList.remove('hidden');
+                
+                renderApp();
+            } else if (view === 'crew') {
+                DOM.viewRoster.classList.add('hidden');
+                DOM.viewCrew.classList.remove('hidden');
+                DOM.viewReports.classList.add('hidden');
+                
+                DOM.navCrew.className = "flex items-center px-3 py-2.5 bg-brand-50 text-brand-700 rounded-lg group transition-colors";
+                DOM.navCrew.querySelector('i').className = "fa-solid fa-users-viewfinder w-5 text-center text-brand-600";
+                
+                DOM.dateNavControls.classList.add('sm:hidden');
+                document.getElementById('btnOpenAddCrewModal').classList.add('hidden');
+                
+                renderCrewDatabase();
+            } else if (view === 'reports') {
+                DOM.viewRoster.classList.add('hidden');
+                DOM.viewCrew.classList.add('hidden');
+                DOM.viewReports.classList.remove('hidden');
+                DOM.viewReports.classList.add('flex');
+                
+                DOM.navReports.className = "flex items-center px-3 py-2.5 bg-brand-50 text-brand-700 rounded-lg group transition-colors";
+                DOM.navReports.querySelector('i').className = "fa-solid fa-chart-pie w-5 text-center text-brand-600";
+                
+                DOM.dateNavControls.classList.add('sm:hidden');
+                document.getElementById('btnOpenAddCrewModal').classList.add('hidden');
+                
+                initReports();
+            }
+        }
+
+        function initReports() {
+            DOM.reportCrewSelect.innerHTML = '<option value="all">All Crew (Fleet Summary)</option>';
+            state.crew.forEach(c => {
+                DOM.reportCrewSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.role})</option>`;
+            });
+            
+            const today = new Date();
+            DOM.reportGeneratedDate.textContent = today.toLocaleDateString('en-GB') + ' ' + today.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            DOM.reportYearText.textContent = `Year: ${state.currentDate.getFullYear()}`;
+
+            generateReportData();
+        }
+
+        DOM.reportCrewSelect.addEventListener('change', generateReportData);
+
+        function generateReportData() {
+            const selectedId = DOM.reportCrewSelect.value;
+            const refDate = state.currentDate;
+            const currentYear = refDate.getFullYear();
+            const currentMonth = refDate.getMonth();
+            const currentWeekStart = getMonday(refDate);
+            const currentWeekEnd = addDays(currentWeekStart, 6);
+
+            let weekCount = 0;
+            let monthCount = 0;
+            let yearCount = 0;
+
+            const monthlyData = new Array(12).fill(0);
+            const dutyTypes = { flight: 0, standby: 0, handover: 0, off: 0 };
+            const detailedLog = [];
+
+            Object.keys(state.schedule).sort().forEach(dateStr => {
+                const dateObj = new Date(dateStr);
+                const dYear = dateObj.getFullYear();
+                const dMonth = dateObj.getMonth();
+                
+                if (dYear !== currentYear) return;
+
+                const dayData = state.schedule[dateStr];
+                
+                const processDuty = (crewId, duty) => {
+                    if (duty.type === 'flight') {
+                        monthlyData[dMonth]++;
+                        yearCount++;
+                        if (dMonth === currentMonth) monthCount++;
+                        if (dateObj >= currentWeekStart && dateObj <= currentWeekEnd) weekCount++;
+                    }
+                    if (dutyTypes[duty.type] !== undefined) dutyTypes[duty.type]++;
+                    
+                    if (duty.type !== 'off') {
+                        const cInfo = state.crew.find(c => c.id === crewId);
+                        detailedLog.push({
+                            date: dateStr,
+                            crewName: cInfo ? cInfo.name : 'Unknown',
+                            type: duty.type,
+                            route: duty.route || '-',
+                            role: duty.role || '-',
+                            reg: duty.reg || '-',
+                            signOn: duty.signOn || '-'
+                        });
+                    }
+                };
+
+                if (selectedId === 'all') {
+                    Object.keys(dayData).forEach(cId => processDuty(cId, dayData[cId]));
+                } else if (dayData[selectedId]) {
+                    processDuty(selectedId, dayData[selectedId]);
+                }
+            });
+
+            DOM.statWeek.textContent = weekCount;
+            DOM.statMonth.textContent = monthCount;
+            DOM.statYear.textContent = yearCount;
+
+            if (selectedId === 'all') {
+                DOM.reportTitleName.textContent = "All Crew Overview";
+                DOM.reportTitleRole.textContent = "Fleet Analytics";
+                DOM.reportAvatarFallback.innerHTML = '<i class="fa-solid fa-users"></i>';
+                DOM.reportAvatarFallback.className = "w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xl font-bold mr-4";
+            } else {
+                const person = state.crew.find(c => c.id === selectedId);
+                DOM.reportTitleName.textContent = person.name;
+                DOM.reportTitleRole.textContent = `ID: ${person.id.toUpperCase()} • ${person.role}`;
+                DOM.reportAvatarFallback.innerHTML = `<img src="${person.avatar}" class="w-full h-full object-cover rounded-full">`;
+                DOM.reportAvatarFallback.className = "w-12 h-12 rounded-full border border-slate-200 mr-4 shrink-0 overflow-hidden";
+            }
+
+            DOM.reportTableBody.innerHTML = '';
+            if (detailedLog.length === 0) {
+                DOM.reportTableBody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 italic">No duty records found for the selected period.</td></tr>`;
+            } else {
+                detailedLog.reverse().forEach(log => {
+                    const badgeColor = log.type === 'flight' ? 'bg-blue-100 text-blue-700' : 
+                                     log.type === 'standby' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700';
+                    
+                    DOM.reportTableBody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="py-3 px-4 font-medium text-slate-700">${new Date(log.date).toLocaleDateString('en-GB', {day:'numeric', month:'short'})}</td>
+                            <td class="py-3 px-4">
+                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${badgeColor}">${log.type}</span>
+                            </td>
+                            <td class="py-3 px-4 text-slate-700 font-bold text-xs uppercase">${log.route}
+                                ${selectedId === 'all' ? `<div class="text-[10px] font-normal text-slate-500 normal-case mt-0.5"><i class="fa-solid fa-user text-[8px]"></i> ${log.crewName}</div>` : ''}
+                            </td>
+                            <td class="py-3 px-4 text-sm text-slate-600">${log.role}</td>
+                            <td class="py-3 px-4 text-xs text-slate-500">
+                                ${log.signOn !== '-' ? `<i class="fa-regular fa-clock"></i> ${log.signOn}` : ''}
+                                ${log.reg !== '-' ? `<br><span class="font-bold text-slate-700 uppercase mt-1 inline-block">${log.reg}</span>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            renderCharts(monthlyData, dutyTypes);
+        }
+
+        function renderCharts(monthlyData, dutyTypes) {
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+            if (dutyChartInstance) dutyChartInstance.destroy();
+
+            const ctxMonth = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChartInstance = new Chart(ctxMonth, {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'Flights Completed',
+                        data: monthlyData,
+                        backgroundColor: '#0ea5e9',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            const ctxDuty = document.getElementById('dutyTypeChart').getContext('2d');
+            dutyChartInstance = new Chart(ctxDuty, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Flight', 'Standby', 'Handover', 'Day Off'],
+                    datasets: [{
+                        data: [dutyTypes.flight, dutyTypes.standby, dutyTypes.handover, dutyTypes.off],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#a855f7', '#cbd5e1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 11} } } }
+                }
+            });
+        }
+
+        DOM.btnDownloadPdf.onclick = () => {
+            const element = DOM.pdfContentArea;
+            const selectedName = DOM.reportCrewSelect.options[DOM.reportCrewSelect.selectedIndex].text.replace(/[^a-zA-Z0-9 ]/g, "");
+            
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5],
+                filename:     `Schedule_Report_${selectedName.replace(/ /g, '_')}_${state.currentDate.getFullYear()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            const originalText = DOM.btnDownloadPdf.innerHTML;
+            DOM.btnDownloadPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Generating...';
+            DOM.btnDownloadPdf.disabled = true;
+
+            setTimeout(() => {
+                html2pdf().set(opt).from(element).save().then(() => {
+                    DOM.btnDownloadPdf.innerHTML = originalText;
+                    DOM.btnDownloadPdf.disabled = false;
+                    showToast('PDF Report downloaded successfully');
+                }).catch(err => {
+                    console.error("PDF Error: ", err);
+                    DOM.btnDownloadPdf.innerHTML = originalText;
+                    DOM.btnDownloadPdf.disabled = false;
+                    showToast('Failed to generate PDF', 'error');
+                });
+            }, 100);
+        };
+
+        DOM.btnOpenAddCrewModalDb.onclick = () => toggleCrewModal(true);
+
+        function renderCrewDatabase() {
+            DOM.crewDbBody.innerHTML = '';
+            const isAdmin = state.currentUser?.role === 'admin';
+            
+            if (isAdmin) {
+                DOM.btnOpenAddCrewModalDb.classList.remove('hidden');
+                DOM.btnOpenAddCrewModalDb.classList.add('flex');
+            } else {
+                DOM.btnOpenAddCrewModalDb.classList.add('hidden');
+                DOM.btnOpenAddCrewModalDb.classList.remove('flex');
+            }
+
+            if (state.crew.length === 0) {
+                DOM.crewDbBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-500 font-medium">No crew members registered in database.</td></tr>`;
+                return;
+            }
+
+            state.crew.forEach(person => {
+                let dutyCount = 0;
+                Object.values(state.schedule).forEach(day => {
+                    if (day[person.id] && day[person.id].type !== 'off') dutyCount++;
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/70 transition-colors group";
+                
+                let actionsHTML = '';
+                if (isAdmin) {
+                    actionsHTML = `
+                        <button onclick="editCrew('${person.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all mr-1" title="Edit Crew">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="promptDeleteCrew('${person.id}')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete Crew">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+                } else {
+                    actionsHTML = `<span class="text-xs font-medium text-slate-400 italic bg-slate-100 px-2 py-1 rounded">View Only</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-4 px-4 border-r border-transparent group-hover:border-slate-100">
+                        <div class="flex items-center">
+                            <img class="h-10 w-10 rounded-full object-cover border border-slate-200" src="${person.avatar}" alt="${person.name}">
+                            <div class="ml-3">
+                                <p class="text-sm font-bold text-slate-900">${person.name}</p>
+                                <p class="text-[10px] font-semibold text-slate-400 tracking-wider">ID: ${person.id.toUpperCase()}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                            ${person.role}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4 text-sm text-slate-600 font-medium truncate max-w-[200px]">
+                        <a href="mailto:${person.email}" class="hover:text-brand-600 transition-colors">${person.email || '<span class="text-slate-400 italic font-normal">No email</span>'}</a>
+                    </td>
+                    <td class="py-4 px-4 text-sm text-slate-600 font-medium">
+                        ${person.whatsapp ? 
+                            `<a href="https://wa.me/${person.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" class="hover:text-green-600 transition-colors flex items-center">
+                                <i class="fa-brands fa-whatsapp text-green-500 mr-1.5 text-lg"></i> ${person.whatsapp}
+                             </a>` 
+                            : '<span class="text-slate-400 italic font-normal">No number</span>'
+                        }
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="text-sm font-bold text-brand-600">${dutyCount}</span>
+                        <span class="text-xs text-slate-500 ml-1">tasks</span>
+                    </td>
+                    <td class="py-4 px-4 text-right">
+                        ${actionsHTML}
+                    </td>
+                `;
+                DOM.crewDbBody.appendChild(tr);
+            });
+        }
+        
+        let confirmDeleteAction = null;
+
+        function promptDeleteCrew(id) {
+            const person = state.crew.find(c => c.id === id);
+            if(!person) return;
+            
+            document.getElementById('confirmMessage').textContent = `Are you sure you want to delete ${person.name}? This will also remove all their scheduled duties from the Cloud.`;
+            DOM.confirmModal.classList.remove('hidden');
+            setTimeout(() => DOM.confirmModal.querySelector('div').classList.remove('scale-95', 'opacity-0'), 10);
+            
+            confirmDeleteAction = async () => {
+                if (!auth.currentUser) return;
+                try {
+                    // Remove from Firebase Crew DB
+                    await deleteDoc(doc(db, `${basePath}/crew`, id));
+                    
+                    // Remove assignments
+                    const cleanupPromises = [];
+                    Object.keys(state.schedule).forEach(date => {
+                        if (state.schedule[date][id]) {
+                            cleanupPromises.push(updateDoc(doc(db, `${basePath}/schedules`, date), {
+                                [id]: deleteField()
+                            }));
+                        }
+                    });
+                    await Promise.all(cleanupPromises);
+                    
+                    closeConfirmModal();
+                    showToast(`Crew member ${person.name} deleted`, 'info');
+                } catch(err) {
+                    console.error(err);
+                    showToast('Failed to delete crew from database', 'error');
+                }
+            };
+        }
+
+        function closeConfirmModal() {
+            DOM.confirmModal.classList.add('hidden');
+            confirmDeleteAction = null;
+        }
+
+        document.getElementById('btnCancelConfirm').onclick = closeConfirmModal;
+        document.getElementById('btnAcceptConfirm').onclick = () => {
+            if(confirmDeleteAction) confirmDeleteAction();
+        };
+
+        function editCrew(id) {
+            toggleCrewModal(true, id);
+        }
+
+        function toggleCrewModal(show, crewId = null) {
+            const titleEl = DOM.crewModal.querySelector('h3');
+            const saveBtn = document.getElementById('btnSaveCrew');
+            const customRoleInput = document.getElementById('customRole');
+            
+            const avatarPreview = document.getElementById('crewAvatarPreview');
+            const avatarUpload = document.getElementById('crewAvatarUpload');
+            const avatarBase64 = document.getElementById('crewAvatarBase64');
+            
+            if (show) {
+                state.editingCrewId = crewId;
+                DOM.crewModal.classList.remove('hidden');
+                setTimeout(() => DOM.crewModal.querySelector('div').classList.remove('scale-95', 'opacity-0'), 10);
+                
+                if (crewId) {
+                    titleEl.textContent = "Edit Crew Member";
+                    saveBtn.textContent = "Update Crew";
+                    const person = state.crew.find(c => c.id === crewId);
+                    if (person) {
+                        const rawName = person.name.replace(/^(Capt\.|FO\.|CS\.|FA\.)\s/, '');
+                        document.getElementById('crewName').value = rawName;
+                        document.getElementById('crewEmail').value = person.email || '';
+                        document.getElementById('crewWhatsapp').value = person.whatsapp || '';
+                        
+                        avatarPreview.src = person.avatar;
+                        avatarBase64.value = person.avatar;
+                        
+                        const roleSelect = document.getElementById('crewRole');
+                        const isPredefined = Array.from(roleSelect.options).some(opt => opt.value === person.role && opt.value !== 'custom');
+                        
+                        if (isPredefined) {
+                            roleSelect.value = person.role;
+                            customRoleInput.classList.add('hidden');
+                            customRoleInput.value = '';
+                        } else {
+                            roleSelect.value = 'custom';
+                            customRoleInput.classList.remove('hidden');
+                            customRoleInput.value = person.role;
+                        }
+                    }
+                } else {
+                    titleEl.textContent = "Add Crew Member";
+                    saveBtn.textContent = "Save Crew";
+                    DOM.addCrewForm.reset();
+                    customRoleInput.classList.add('hidden');
+                    
+                    avatarPreview.src = "https://ui-avatars.com/api/?name=New+Crew&background=0ea5e9&color=fff";
+                    avatarBase64.value = "";
+                }
+                
+                avatarUpload.value = ''; 
+                document.getElementById('crewName').focus();
+            } else {
+                DOM.crewModal.classList.add('hidden');
+                DOM.addCrewForm.reset();
+                customRoleInput.classList.add('hidden');
+                state.editingCrewId = null;
+            }
+        }
+
+        document.getElementById('crewAvatarUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 1024 * 1024) {
+                    showToast('File too large. Maximum size is 1MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64String = event.target.result;
+                    document.getElementById('crewAvatarPreview').src = base64String;
+                    document.getElementById('crewAvatarBase64').value = base64String; 
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('crewRole').addEventListener('change', function() {
+            const customInput = document.getElementById('customRole');
+            if (this.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        });
+
+        document.getElementById('dutyRole').addEventListener('change', function() {
+            const customInput = document.getElementById('customDutyRole');
+            if (this.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        });
+
+        document.getElementById('btnOpenAddCrewModal').onclick = () => toggleCrewModal(true);
+        document.getElementById('btnCloseCrewModal').onclick = () => toggleCrewModal(false);
+        document.getElementById('btnCancelCrewModal').onclick = () => toggleCrewModal(false);
+
+        document.getElementById('btnSaveCrew').onclick = async (e) => {
+            e.preventDefault();
+            if (!auth.currentUser) return;
+
+            const name = document.getElementById('crewName').value.trim();
+            const email = document.getElementById('crewEmail').value.trim();
+            const whatsapp = document.getElementById('crewWhatsapp').value.trim();
+            let role = document.getElementById('crewRole').value;
+            let avatarBase64 = document.getElementById('crewAvatarBase64').value;
+
+            if (role === 'custom') {
+                role = document.getElementById('customRole').value.trim();
+                if (!role) {
+                    showToast('Please specify the custom role', 'error');
+                    return;
+                }
+            }
+
+            if (!name) {
+                showToast('Crew name is required', 'error');
+                return;
+            }
+
+            if (!avatarBase64) {
+                avatarBase64 = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0ea5e9&color=fff`;
+            }
+
+            let prefix = '';
+            if (role === 'Captain') prefix = 'Capt.';
+            else if (role === 'First Officer') prefix = 'FO.';
+            else if (role === 'Cabin Service') prefix = 'CS.';
+            
+            const fullName = prefix ? `${prefix} ${name}` : name;
+            
+            try {
+                if (state.editingCrewId) {
+                    await updateDoc(doc(db, `${basePath}/crew`, state.editingCrewId), {
+                        name: fullName,
+                        role: role,
+                        email: email,
+                        whatsapp: whatsapp,
+                        avatar: avatarBase64
+                    });
+                    showToast(`${fullName} updated in database`);
+                } else {
+                    const newId = 'c' + Date.now();
+                    await setDoc(doc(db, `${basePath}/crew`, newId), {
+                        id: newId, name: fullName, role: role, email: email, whatsapp: whatsapp, avatar: avatarBase64
+                    });
+                    showToast(`${fullName} added to database`);
+                }
+                toggleCrewModal(false);
+            } catch(err) {
+                console.error(err);
+                showToast('Failed to save to database', 'error');
+            }
+        };
+
+        function initAuthUI() {
             DOM.authOverlay.classList.remove('hidden');
             
-            // View toggles
             document.getElementById('showRegister').onclick = (e) => {
                 e.preventDefault();
                 DOM.loginView.classList.add('hidden');
@@ -822,40 +1783,99 @@
                 DOM.loginView.classList.remove('hidden');
             };
 
-            // Login Logic
-            document.getElementById('loginForm').onsubmit = (e) => {
+            // Toggle Password Visibility Logic
+            document.getElementById('toggleLoginPass').onclick = (e) => {
+                const passInput = document.getElementById('loginPass');
+                const icon = document.getElementById('loginPassIcon');
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    passInput.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            };
+
+            document.getElementById('toggleRegPass').onclick = (e) => {
+                const passInput = document.getElementById('regPass');
+                const icon = document.getElementById('regPassIcon');
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    passInput.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            };
+
+            // Login form uses Firestore check
+            document.getElementById('loginForm').onsubmit = async (e) => {
                 e.preventDefault();
                 const userVal = document.getElementById('loginUser').value.trim();
                 const passVal = document.getElementById('loginPass').value.trim();
                 
-                const user = state.users.find(u => u.username === userVal && u.password === passVal);
-                if (user) {
-                    state.currentUser = user;
-                    loginSuccess();
-                } else {
-                    showToast('Invalid username or password', 'error');
+                try {
+                    const userSnap = await getDoc(doc(db, `${basePath}/app_users`, userVal));
+                    
+                    if (userSnap.exists() && userSnap.data().password === passVal) {
+                        state.currentUser = userSnap.data();
+                        loginSuccess();
+                    } else {
+                        showToast('Invalid username or password', 'error');
+                    }
+                } catch(err) {
+                    console.error(err);
+                    showToast('Connection error. Verify Firebase config.', 'error');
                 }
             };
 
-            // Register Logic
-            document.getElementById('registerForm').onsubmit = (e) => {
+            // Register form writes to Firestore
+            document.getElementById('registerForm').onsubmit = async (e) => {
                 e.preventDefault();
-                const userVal = document.getElementById('regUser').value.trim();
-                const passVal = document.getElementById('regPass').value.trim();
-                
-                if (state.users.find(u => u.username === userVal)) {
-                    showToast('Username already taken', 'error');
+                if (!auth.currentUser) {
+                    showToast('Waiting for connection...', 'info');
                     return;
                 }
+
+                const userVal = document.getElementById('regUser').value.trim();
+                const passVal = document.getElementById('regPass').value.trim();
+                const nameVal = document.getElementById('regName').value.trim();
+                const emailVal = document.getElementById('regEmail').value.trim();
+                const waVal = document.getElementById('regWhatsapp').value.trim();
+                const rankVal = document.getElementById('regRank').value;
                 
-                const newUser = { username: userVal, password: passVal, role: 'user' };
-                state.users.push(newUser);
-                state.currentUser = newUser;
-                loginSuccess();
-                showToast('Registration successful! Logged in as User.');
+                try {
+                    const userSnap = await getDoc(doc(db, `${basePath}/app_users`, userVal));
+                    if (userSnap.exists()) {
+                        showToast('Username already taken', 'error');
+                        return;
+                    }
+
+                    let prefix = '';
+                    if (rankVal === 'Captain') prefix = 'Capt.';
+                    else if (rankVal === 'First Officer') prefix = 'FO.';
+                    else if (rankVal === 'Cabin Service') prefix = 'CS.';
+                    
+                    const fullName = prefix ? `${prefix} ${nameVal}` : nameVal;
+                    const newCrewId = 'c' + Date.now();
+                    const avatarBase64 = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameVal)}&background=0ea5e9&color=fff`;
+
+                    const newCrew = { id: newCrewId, name: fullName, role: rankVal, email: emailVal, whatsapp: waVal, avatar: avatarBase64 };
+                    const newUser = { username: userVal, password: passVal, role: 'user', crewId: newCrewId };
+                    
+                    // Save to Firebase
+                    await setDoc(doc(db, `${basePath}/crew`, newCrewId), newCrew);
+                    await setDoc(doc(db, `${basePath}/app_users`, userVal), newUser);
+                    
+                    state.currentUser = newUser;
+                    loginSuccess();
+                    showToast('Registration successful! Data saved to Cloud.');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to register', 'error');
+                }
             };
 
-            // Logout Logic
             DOM.btnLogout.onclick = () => {
                 state.currentUser = null;
                 DOM.authOverlay.classList.remove('hidden');
@@ -870,16 +1890,6 @@
             DOM.authOverlay.classList.add('hidden');
             const isAdmin = state.currentUser.role === 'admin';
             
-            // UI Adjustments for Role
-            if (isAdmin) {
-                document.getElementById('btnOpenAddCrewModal').classList.remove('hidden');
-                document.getElementById('btnOpenAddCrewModal').classList.add('flex');
-            } else {
-                document.getElementById('btnOpenAddCrewModal').classList.add('hidden');
-                document.getElementById('btnOpenAddCrewModal').classList.remove('flex');
-            }
-
-            // Update Profile Info
             const profileName = document.getElementById('sidebarProfileName');
             const profileRole = document.getElementById('sidebarProfileRole');
             if (profileName && profileRole) {
@@ -888,15 +1898,12 @@
                 profileRole.className = `text-xs font-medium ${isAdmin ? 'text-brand-600' : 'text-slate-500'}`;
             }
 
-            renderApp();
+            switchView('roster');
             showToast(`Welcome back, ${state.currentUser.username}`);
         }
 
-        window.onload = () => {
-            initAuth();
-            DOM.dutyForm.addEventListener('submit', (e) => e.preventDefault());
-            DOM.addCrewForm.addEventListener('submit', (e) => e.preventDefault());
-        };
+        // Initialize Firebase Authentication immediately on script load, independent of UI load
+        initializeAppAuth();
     </script>
 </body>
 </html>
